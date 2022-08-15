@@ -20,7 +20,7 @@ public class MarketDataProcessor implements RateLimiter {
     private AtomicLong lastPublishTime = new AtomicLong(System.currentTimeMillis());
     private AtomicLong lastMessageUpdateTime = new AtomicLong(System.currentTimeMillis());
 
-    // private constructor
+    // private constructor to ensure class with single instance
     private MarketDataProcessor(){
 
     }
@@ -58,6 +58,10 @@ public class MarketDataProcessor implements RateLimiter {
 
     }
 
+    /**
+     * @description check if there is any data publish capacity
+     * @return boolean
+     */
     @Override
     public boolean grantPublishAccess() {
         refreshCapacity();
@@ -69,16 +73,23 @@ public class MarketDataProcessor implements RateLimiter {
         return false;
     }
 
+    /**
+     * @description refresh data publish capacity if 1 second has passed
+     */
     void refreshCapacity(){
         long currentTime = System.currentTimeMillis();
 
         if(currentTime - lastPublishTime.get() > TIME_WINDOW){
             currentCapacity.getAndSet(DATA_CAPACITY);
+            lastPublishTime.getAndSet(currentTime);
         }
-
-        lastPublishTime.getAndSet(currentTime);
     }
 
+    /**
+     * @description only allow update if the data is not in the HashMap or 1 second has passed
+     * @param data
+     * @return boolean
+     */
     @Override
     public boolean grantUpdateAccess(MarketData data) {
         long currentTime = System.currentTimeMillis();
@@ -86,10 +97,8 @@ public class MarketDataProcessor implements RateLimiter {
         if(currentTime - lastMessageUpdateTime.get() > TIME_WINDOW || !(marketDataMap.containsKey(data.getSymbol()))){
             lastMessageUpdateTime.getAndSet(currentTime);
             return true;
-        }else if(currentTime - lastMessageUpdateTime.get() <= TIME_WINDOW && marketDataMap.containsKey(data.getSymbol())){
-            return false;
         }
 
-        return true;
+        return false;
     }
 }

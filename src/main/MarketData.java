@@ -1,11 +1,9 @@
 package main;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 public class MarketData {
 
-    private UUID dataId;
     private String symbol;
     private double lastSalePrice;
     private double bidPrice;
@@ -24,7 +22,4 @@ public class MarketData {
         return this.symbol;
     }
 
-    public UUID getDataId() {
-        return dataId;
-    }
 }
